@@ -56,13 +56,8 @@
 
                 <div class="d-flex wiz-reply-content" id="content_@post.Id" style="overflow: auto;">
                     <div class="w-2 flex-md-column p-2 text-center">
-                        <a href="/profile/?user=@post.Value("postCreator")" title="View @post.Value("postCreator")'s profile" class="wiz-author-link">
-                            <span>
-                                @{
-                                    DisplayAvatar(author);
-                                }
-                            </span>
-                        </a>
+                        @* Author shown as their username (no avatar, no profile link). *@
+                        <span class="wiz-author-name d-block">@post.Value("postCreator")</span>
                         @if (author != null)
                         {
                             <span class="d-block text-nowrap">@author.Value("postCount") posts</span>
@@ -98,7 +93,7 @@
                                 }
                                 @if (isApproved)
                                 {
-                                    <li class="list-inline-item"><a href="#post_@post.Id" title="@await DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.Link.Title","Direct link to post")"><i class="fs-5 bi-link-45deg"></i><span class="tool-label" style="display: none;">@DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.Link.Text","Copy link")</span></a> </li>               
+                                    <li class="list-inline-item"><a href="#post_@post.Id" title="@await DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.Link.Title","Direct link to post")"><i class="fs-5 bi-link-45deg"></i><span class="tool-label" style="display: none;">@(await DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.Link.Text","Copy link"))</span></a> </li>               
                                 }
                             </ul>
                         </div>
@@ -201,8 +196,8 @@
             @if (isApproved)
             {
                 <li class="list-inline-item">
-                    <a class="post-quote" data-postid="@post.Id" title="@DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.QuoteLink.Title","Reply with Quote")" href="#">
-                        <i class="fs-5 bi-chat-quote" aria-hidden="true"></i> <span class="tool-label" style="display: none;">@DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.QuoteLink.Text","Quote")</span>
+                    <a class="post-quote" data-postid="@post.Id" title="@(DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.QuoteLink.Title","Reply with Quote").Result)" href="#">
+                        <i class="fs-5 bi-chat-quote" aria-hidden="true"></i> <span class="tool-label" style="display: none;">@(DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.QuoteLink.Text","Quote").Result)</span>
                     </a>
                 </li>                
             }
@@ -210,8 +205,8 @@
             @if (!post.Value<bool>("postType") && !isSolved && isApproved)
             {
                 <li class="list-inline-item">
-                    <a href="#" class="post-answer" data-postid="@post.Id" title="@DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.SolutionLink.Title","Mark as solution")">
-                        <i class="fs-5 bi-check-circle" aria-hidden="true"></i> <span class="tool-label" style="display: none;">@DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.SolutionLink.Text","Mark as solution")</span>
+                    <a href="#" class="post-answer" data-postid="@post.Id" title="@(DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.SolutionLink.Title","Mark as solution").Result)">
+                        <i class="fs-5 bi-check-circle" aria-hidden="true"></i> <span class="tool-label" style="display: none;">@(DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.SolutionLink.Text","Mark as solution").Result)</span>
                     </a>
                 </li>
             }
@@ -220,13 +215,13 @@
                 @if (post.CreateDate >= lastpostDate || roles.Contains("ForumAdministrator"))
                 {
                     <li class="list-inline-item">
-                        <a class="post-delete" data-postid="@post.Id" title="@DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.DeleteLink.Title","Delete Post")" href="#">
-                            <i class="fs-5 bi-trash" aria-hidden="true"></i> <span class="tool-label" style="display: none;">@DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.DeleteLink.Text","Delete")</span>
+                        <a class="post-delete" data-postid="@post.Id" title="@(DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.DeleteLink.Title","Delete Post").Result)" href="#">
+                            <i class="fs-5 bi-trash" aria-hidden="true"></i> <span class="tool-label" style="display: none;">@(DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.DeleteLink.Text","Delete").Result)</span>
                         </a>
                     </li>
                     <li class="list-inline-item">
-                        <a href="#" class="post-edit" data-postid="@post.Id" data-bs-toggle="modal" data-bs-target="#editPostModal" title="@DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.EditLink.Title","Edit Post")">
-                            <i class="fs-5 bi-pencil" aria-hidden="true"></i> <span class="tool-label" style="display: none;">@DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.EditLink.Text","Edit")</span>
+                        <a href="#" class="post-edit" data-postid="@post.Id" data-bs-toggle="modal" data-bs-target="#editPostModal" title="@(DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.EditLink.Title","Edit Post").Result)">
+                            <i class="fs-5 bi-pencil" aria-hidden="true"></i> <span class="tool-label" style="display: none;">@(DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.EditLink.Text","Edit").Result)</span>
                         </a>
                     </li>
                 }
@@ -234,14 +229,14 @@
                 @if (post.Value<bool>("postType") && (roles.Contains("ForumAdministrator") || roles.Contains("ForumModerator")))
                 {
                     <li class="list-inline-item">
-                        <a class="post-lock" data-postid="@post.Id" href="#" rel="nofollow" title="@DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.LockUnlock","Lock/Unlock Post")">
+                        <a class="post-lock" data-postid="@post.Id" href="#" rel="nofollow" title="@(DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.LockUnlock","Lock/Unlock Post").Result)">
                             @if (TopicIslocked)
                             {
-                                <i class="fs-5 bi-unlock " aria-hidden="true"></i> <span class="tool-label" style="display: none;">@DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.Unlock","Unlock")</span>
+                                <i class="fs-5 bi-unlock " aria-hidden="true"></i> <span class="tool-label" style="display: none;">@(DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.Unlock","Unlock").Result)</span>
                             }
                             else
                             {
-                                <i class="fs-5 bi-lock" aria-hidden="true"></i> <span class="tool-label" style="display: none;">@DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.Lock","Lock")</span>
+                                <i class="fs-5 bi-lock" aria-hidden="true"></i> <span class="tool-label" style="display: none;">@(DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.Lock","Lock").Result)</span>
                             }
                         </a>
                     </li>
@@ -254,8 +249,8 @@
                     @if (!post.Value<bool>("approved"))
                     {
                         <li class="list-inline-item">
-                            <a class="post-approve" data-postid="@post.Id" href="#" rel="nofollow" title="@DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.Approve","Approve Post")">
-                                <i class="fs-5 bi-file-check" aria-hidden="true"></i> <span class="tool-label" style="display: none;">@DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.Approve", "Approve Post")</span>
+                            <a class="post-approve" data-postid="@post.Id" href="#" rel="nofollow" title="@(DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.Approve","Approve Post").Result)">
+                                <i class="fs-5 bi-file-check" aria-hidden="true"></i> <span class="tool-label" style="display: none;">@(DictionaryService.GetOrCreateDictionaryValue("Forums.Posts.Approve", "Approve Post").Result)</span>
                             </a>
                         </li>
                     }

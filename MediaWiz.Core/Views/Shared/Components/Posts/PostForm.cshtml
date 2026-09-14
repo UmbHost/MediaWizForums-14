@@ -95,17 +95,43 @@
 }
 <storecontent asp-key="script-block">
     <script>
-        $(document).ready(function () {
-            if ($("#postform-validation li").css("visibility") === "hidden" || $("#postform-validation li").css("opacity") === "0" ||
-            $("#postform-validation li").css("display") === "none") {
-                console.log("The element is visually hidden.");
-            }else{
-                $('.accordion-collapse').collapse('show');
-                $("#mediawiz-forums").animate({
-                    scrollTop: $('#mediawiz-forums').get(0).scrollHeight
-                }, 1000);
+        (function () {
+            // Open the reply-form accordion. Uses Bootstrap 5's vanilla Collapse API
+            // (the old $(...).collapse('show') jQuery plugin doesn't exist in BS5).
+            function showReplyForm() {
+                var el = document.getElementById('flush-collapseOne');
+                if (el && window.bootstrap && window.bootstrap.Collapse) {
+                    window.bootstrap.Collapse.getOrCreateInstance(el).show();
+                }
+                return el;
             }
-        });
+
+            document.addEventListener('DOMContentLoaded', function () {
+                // If the reply form re-rendered with validation errors, re-open it.
+                var err = document.querySelector('#postform-validation li');
+                if (err) {
+                    var cs = getComputedStyle(err);
+                    var hidden = cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0';
+                    if (!hidden) {
+                        showReplyForm();
+                        var main = document.getElementById('mediawiz-forums');
+                        if (main) { main.scrollIntoView({ behavior: 'smooth', block: 'end' }); }
+                    }
+                }
+            });
+
+            // Clicking a post's Quote tool opens the reply accordion (in addition
+            // to mediawiz.forums.js inserting the quoted text into the textarea).
+            // Registered in the CAPTURE phase (third arg true) because mediawiz's own
+            // .post-quote handler calls e.stopPropagation(), which would otherwise
+            // stop this bubble-phase listener from ever firing.
+            document.addEventListener('click', function (e) {
+                if (e.target.closest('.post-quote')) {
+                    var el = showReplyForm();
+                    if (el) { setTimeout(function () { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 250); }
+                }
+            }, true);
+        })();
     </script>
 </storecontent>
 

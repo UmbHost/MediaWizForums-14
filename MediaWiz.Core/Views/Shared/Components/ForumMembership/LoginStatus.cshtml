@@ -13,12 +13,11 @@
     var user = memberManager.GetCurrentMemberAsync().Result;
     if (_hostingSettings.Smtp == null)
     {
-        @DictionaryService.GetOrCreateDictionaryValue("Forums.Email.Notconfigured","Email is not configured")
+        @(await DictionaryService.GetOrCreateDictionaryValue("Forums.Email.Notconfigured","Email is not configured"))
     }
     if ( memberManager.IsLoggedIn())
     {
-            <span class="bi bi-star" aria-hidden="true" style="color: gold;"></span>
-            @await DictionaryService.GetOrCreateDictionaryValue("Forums.Signin.Welcome","Welcome back") <a href="/profile/?user=@user.UserName" rel="no-follow" title="@await DictionaryService.GetOrCreateDictionaryValue("Forums.Profile.View","View profile")" class="nav-icon">@user.Name</a>
+            <a href="/profile/?user=@user.UserName" rel="no-follow" class="nav-link" title="@await DictionaryService.GetOrCreateDictionaryValue("Forums.Profile.Edit","Edit Profile")"><i class="fs-5 bi-person me-3"></i><span class="d-none d-sm-none d-md-inline">@await DictionaryService.GetOrCreateDictionaryValue("Forums.Profile.Edit","Edit Profile")</span></a>
     }
     else
     {
@@ -26,7 +25,7 @@
         @if (_hostingSettings.Smtp != null)
         {
             <a href="@await DictionaryService.GetOrCreateDictionaryValue("Forums.RegisterUrl","/register")" class="nav-link" title="Register"><i class="fs-5 bi-person-badge me-3"></i><span class="d-none d-sm-none d-md-inline">@await DictionaryService.GetOrCreateDictionaryValue("Forums.Register","Register")</span></a>
-            // <a href="@DictionaryService.GetOrCreateDictionaryValue("Forums.ForgotPassword","/ForgotPassword")" class="nav-link" title="Forgot Password"><i class="fs-5 bi-file-lock me-3"></i><span class="d-none d-sm-none d-md-inline">@DictionaryService.GetOrCreateDictionaryValue("Forums.Profile.Forgotpassword","Forgot Password")</span></a>
+            // <a href="@(await DictionaryService.GetOrCreateDictionaryValue("Forums.ForgotPassword","/ForgotPassword"))" class="nav-link" title="Forgot Password"><i class="fs-5 bi-file-lock me-3"></i><span class="d-none d-sm-none d-md-inline">@(await DictionaryService.GetOrCreateDictionaryValue("Forums.Profile.Forgotpassword","Forgot Password"))</span></a>
         }
     }
 }

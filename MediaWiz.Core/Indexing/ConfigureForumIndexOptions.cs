@@ -55,7 +55,12 @@ namespace MediaWiz.Forums.Indexing
                     );
 
                 options.UnlockIndex = true;
-                options.Validator = new ContentValueSetValidator(true,false,_publicAccessService,_scopeProvider,includeItemTypes:new[] { "forumPost" });  
+                // publishedValuesOnly:false + supportProtectedContent:true — the populator
+                // builds value sets directly from IContent (no published marker), and forum
+                // posts often sit under member-protected content. With the previous
+                // (true,false) the validator rejected every forum value set, leaving the
+                // index empty (so search + active-topics returned nothing).
+                options.Validator = new ContentValueSetValidator(false,true,_publicAccessService,_scopeProvider);
 
                 if (_settings.Value.LuceneDirectoryFactory == LuceneDirectoryFactory.SyncedTempFileSystemDirectoryFactory)
                 {

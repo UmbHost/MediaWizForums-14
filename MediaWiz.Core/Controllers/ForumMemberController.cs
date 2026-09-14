@@ -1,6 +1,7 @@
 ﻿using MediaWiz.Forums.Extensions;
 using MediaWiz.Forums.Helpers;
 using MediaWiz.Forums.Interfaces;
+using MediaWiz.Forums.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -39,8 +40,9 @@ namespace MediaWiz.Forums.Controllers
         private readonly IMemberSignInManager _memberSignInManager;
         private readonly IDictionaryItemService _dictionaryService;
         private readonly IOptions<ForumConfigOptions> _forumOptions;
+        private readonly ITurnstileVerifier _turnstile;
 
-        public ForumMemberController(IMemberManager memberManager, IMemberService memberService, IUmbracoContextAccessor umbracoContextAccessor, IUmbracoDatabaseFactory databaseFactory, ServiceContext services, AppCaches appCaches, IProfilingLogger profilingLogger, IPublishedUrlProvider publishedUrlProvider, IMemberSignInManager memberSignInManager, IScopeProvider scopeProvider,ILogger<ForumMemberController> logger,IHttpContextAccessor httpContextAccessor,IForumMailService mailService,IDictionaryItemService dictionaryService,IOptions<ForumConfigOptions> forumOptions) 
+        public ForumMemberController(IMemberManager memberManager, IMemberService memberService, IUmbracoContextAccessor umbracoContextAccessor, IUmbracoDatabaseFactory databaseFactory, ServiceContext services, AppCaches appCaches, IProfilingLogger profilingLogger, IPublishedUrlProvider publishedUrlProvider, IMemberSignInManager memberSignInManager, IScopeProvider scopeProvider,ILogger<ForumMemberController> logger,IHttpContextAccessor httpContextAccessor,IForumMailService mailService,IDictionaryItemService dictionaryService,IOptions<ForumConfigOptions> forumOptions,ITurnstileVerifier turnstile)
             : base(memberManager, memberService, umbracoContextAccessor, databaseFactory, services, appCaches, profilingLogger, publishedUrlProvider, memberSignInManager, scopeProvider)
         {
             _logger = logger;
@@ -51,6 +53,28 @@ namespace MediaWiz.Forums.Controllers
             _memberSignInManager = memberSignInManager;
             _dictionaryService = dictionaryService;
             _forumOptions = forumOptions;
+            _turnstile = turnstile;
+        }
+
+        /// <summary>
+        /// Verifies the Cloudflare Turnstile token posted with a login/registration
+        /// form. No-op when Turnstile isn't configured. Adds a model error and
+        /// returns false when verification fails.
+        /// </summary>
+        private async Task<bool> TurnstilePassedAsync(string action)
+        {
+            if (!_turnstile.IsEnabled)
+            {
+                return true;
+            }
+            var token = Request.HasFormContentType ? Request.Form["cf-turnstile-response"].ToString() : null;
+            var remoteIp = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+            if (await _turnstile.VerifyAsync(token, remoteIp, action))
+            {
+                return true;
+            }
+            ModelState.AddModelError("", await _dictionaryService.GetOrCreateDictionaryValue("Forums.Error.CaptchaFail", "Please complete the verification challenge and try again."));
+            return false;
         }
 
         private string GetReferer()
@@ -82,6 +106,10 @@ namespace MediaWiz.Forums.Controllers
         public async Task<IActionResult> HandleLoginAsync([Bind(Prefix = "LoginModel")] LoginModel login)
         {
             ViewBag.NoCaptcha = true;
+            if (!await TurnstilePassedAsync("login"))
+            {
+                return CurrentUmbracoPage();
+            }
             if (ModelState.IsValid == false)
             {
                 return CurrentUmbracoPage();
@@ -136,6 +164,10 @@ namespace MediaWiz.Forums.Controllers
         {
             ViewBag.NoCaptcha = true;
 
+            if (!await TurnstilePassedAsync("register"))
+            {
+                return CurrentUmbracoPage();
+            }
             if (ModelState.IsValid == false)
             {
                 return CurrentUmbracoPage();

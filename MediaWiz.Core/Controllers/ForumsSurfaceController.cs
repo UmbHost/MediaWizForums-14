@@ -52,6 +52,7 @@ namespace MediaWiz.Forums.Controllers
         private readonly IIdKeyMap _keyMap;
         private readonly ICoreScopeProvider _coreScopeProvider;
         private readonly IEventAggregator _eventAggregator;
+        private readonly MediaWiz.Forums.Services.ITurnstileVerifier _turnstile;
 
         public ForumsSurfaceController(IUmbracoContextAccessor umbracoContextAccessor, IUmbracoDatabaseFactory databaseFactory, ServiceContext services, AppCaches appCaches, IProfilingLogger profilingLogger, IPublishedUrlProvider publishedUrlProvider,
             IMemberService memberService,
@@ -62,7 +63,8 @@ namespace MediaWiz.Forums.Controllers
             IForumMailService mailService,IHttpContextAccessor httpContextAccessor,IDictionaryItemService dictionaryService,
             ILanguageService languageService,IIdKeyMap keyMap,
             ICoreScopeProvider coreScopeProvider,
-            IEventAggregator eventAggregator) 
+            IEventAggregator eventAggregator,
+            MediaWiz.Forums.Services.ITurnstileVerifier turnstile)
             : base(umbracoContextAccessor, databaseFactory, services, appCaches, profilingLogger, publishedUrlProvider)
         {
             _memberService = memberService;
@@ -78,6 +80,7 @@ namespace MediaWiz.Forums.Controllers
             _keyMap = keyMap;
             _coreScopeProvider = coreScopeProvider;
             _eventAggregator = eventAggregator;
+            _turnstile = turnstile;
         }
         [HttpGet]
         public IActionResult EditPost(int id)
@@ -463,6 +466,20 @@ namespace MediaWiz.Forums.Controllers
         public async Task<IActionResult> ForgotPassword(ForumForgotPasswordModel model)
         {
             TempData["ResetSent"] = false;
+
+            // Cloudflare Turnstile gate (replaces the native captcha). No-op when
+            // Turnstile isn't configured.
+            if (_turnstile.IsEnabled)
+            {
+                var tsToken = Request.HasFormContentType ? Request.Form["cf-turnstile-response"].ToString() : null;
+                var remoteIp = _contextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                if (!await _turnstile.VerifyAsync(tsToken, remoteIp, "forgot-password"))
+                {
+                    ModelState.AddModelError("", await _dictionaryService.GetOrCreateDictionaryValue("Forums.Error.CaptchaFail", "Please complete the verification challenge and try again."));
+                    return ViewComponent("PasswordManager", new { Model = model, Template = "ForgotPassword" });
+                }
+            }
+
             if (!ModelState.IsValid)
             {
                 return ViewComponent("PasswordManager", new { Model = model , Template = "ForgotPassword"});

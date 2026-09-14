@@ -13,6 +13,7 @@
 @inject MemberModelBuilderFactory memberModelBuilderFactory
 @inject IOptions<GlobalSettings> hostingSettings
 @inject IOptions<ForumConfigOptions> forumOptions
+@inject MediaWiz.Forums.Services.ITurnstileVerifier Turnstile
 
 @{
     var noCaptcha = ViewBag.NoCaptcha == true;
@@ -40,15 +41,9 @@
 }
 else
 {
-    @if (useCaptcha && !noCaptcha)
-    {
-        
-        <div id="captchaimage-div">
-            @await Component.InvokeAsync("Captcha")
-        </div>
-    }
-
-    @using (Html.BeginUmbracoForm<ForumMemberController>("RegisterMe", null, new { @id = "register-form-id", style = "display:none", autocomplete = "off", @class = "w-75 mx-auto needs-validation mt-5", novalidate="" }, FormMethod.Post))
+    @* Native math captcha replaced by Cloudflare Turnstile (widget rendered
+       inside the form below; validated in ForumMemberController). *@
+    @using (Html.BeginUmbracoForm<ForumMemberController>("RegisterMe", null, new { @id = "register-form-id", autocomplete = "off", @class = "w-75 mx-auto needs-validation mt-5", novalidate="" }, FormMethod.Post))
     {
         <div class="row gy-3 gy-md-4 overflow-hidden">
         <div class="col-12 gy-1">
@@ -117,6 +112,12 @@ else
             </div>
         </div>
 
+        @if (Turnstile.IsEnabled)
+        {
+            <div class="col-12 gy-2">
+                <div class="cf-turnstile" data-sitekey="@Turnstile.SiteKey" data-action="register"></div>
+            </div>
+        }
         <div class="col-12 gy-2">
             <div class="d-grid">
                 <button class="btn btn-lg btn-secondary" type="submit" id="register-submit">@await DictionaryService.GetOrCreateDictionaryValue("Forums.Members.Register", "Sign up")</button>
@@ -136,6 +137,10 @@ else
 
 }
 <storecontent asp-key="script-block">
+    @if (Turnstile.IsEnabled)
+    {
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    }
     <script type="text/javascript" id="registerJs">
         document.addEventListener("DOMContentLoaded", (event) => {
             if ("@useCaptcha".toLowerCase() === "false" || "@noCaptcha".toLowerCase() == "true") {

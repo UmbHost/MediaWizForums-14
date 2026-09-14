@@ -25,6 +25,9 @@ namespace MediaWiz.Forums.Composers
             builder.Services.AddSingleton<IIndexPopulator, ForumMemberIndexPopulator>();
             builder.AddNotificationHandler<MemberCacheRefresherNotification, ForumMemberIndexingNotificationHandler>();
 
+            // Populate ForumIndex on startup when it's empty (e.g. after a content
+            // migration) so forum search + active-topics work without a manual rebuild.
+            builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, ForumIndexStartupRebuildHandler>();
         }
     }
 }
