@@ -33,16 +33,18 @@
     <PackageReference Include="Microsoft.Maui.Graphics.Skia" Version="10.0.11" />
     <PackageReference Include="MimeKit" Version="4.17.0" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.1" />
-    <!-- Pinned to the exact Umbraco version the consuming site (DesigningLibraries)
-         ships. A floating 17.* drifts ahead of the host on restore (e.g. to 17.7.0
-         while the app publishes Umbraco.Infrastructure 17.6.2), which crashes at
-         startup with a FileNotFoundException in Umbraco's assembly scanner. Bump
-         these in lockstep with the host's Umbraco.Cms version. -->
-    <PackageReference Include="Umbraco.Cms.Core" Version="[17.6.2]" />
-	<PackageReference Include="Umbraco.Cms.Examine.Lucene" Version="[17.6.2]" />
-	<PackageReference Include="Umbraco.Cms.Infrastructure" Version="[17.6.2]" />
-	<PackageReference Include="Umbraco.Cms.Web.Common" Version="[17.6.2]" />
-	<PackageReference Include="Umbraco.Cms.Web.Website" Version="[17.6.2]" />
+    <!-- Minimum versions, not floating or exact. A floating 17.* drifts ahead of
+         the host on restore (e.g. to 17.7.0 while the app publishes
+         Umbraco.Infrastructure 17.6.2), which crashes at startup with a
+         FileNotFoundException in Umbraco's assembly scanner. An exact [17.6.2]
+         pin blocks the host from upgrading (NU1107). A plain minimum resolves to
+         the lowest applicable version, so it never drifts ahead and unifies with
+         whatever Umbraco.Cms version the consuming site references. -->
+    <PackageReference Include="Umbraco.Cms.Core" Version="17.6.2" />
+	<PackageReference Include="Umbraco.Cms.Examine.Lucene" Version="17.6.2" />
+	<PackageReference Include="Umbraco.Cms.Infrastructure" Version="17.6.2" />
+	<PackageReference Include="Umbraco.Cms.Web.Common" Version="17.6.2" />
+	<PackageReference Include="Umbraco.Cms.Web.Website" Version="17.6.2" />
 	<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
 </ItemGroup>
 	
